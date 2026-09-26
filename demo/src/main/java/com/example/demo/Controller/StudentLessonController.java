@@ -2,8 +2,9 @@ package com.example.demo.Controller;
 
 import java.util.List;
 
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,61 +21,70 @@ import com.example.demo.Service.StudentLessonService;
 import jakarta.validation.constraints.PositiveOrZero;
 
 @RestController
-	@RequestMapping("student-lessons")
-    @Validated
-	public class StudentLessonController {
+@RequestMapping("student-lessons")
+@Validated
+public class StudentLessonController {
 
-	    private final StudentLessonService studentLessonService;
+    private final StudentLessonService studentLessonService;
 
-	    public StudentLessonController(StudentLessonService studentLessonService) {
-	        this.studentLessonService = studentLessonService;
-	    }
-
-	    @PostMapping("student/{studentId}/lesson/{lessonId}")
-	    public ResponseEntity<StudentLessonDTO> assignLessonToStudent(
-	            @PathVariable Long studentId,
-	            @PathVariable Long lessonId) {
-
-	        return ResponseEntity.ok(
-	                studentLessonService.assignLessonToStudent(studentId, lessonId)
-	        );
-	    }
-	    @PutMapping("{studentLessonId}/grade/{grade}/absent")
-	    public ResponseEntity<StudentLessonDTO> setAbsentAndGrade(
-	            @PathVariable Long studentLessonId,
-	            @PathVariable Grade grade,
-	            @RequestParam @PositiveOrZero int absent) {
-
-	        return ResponseEntity.ok(
-	                studentLessonService.setAbsentAndGrade(
-	                        studentLessonId,
-	                        grade,
-	                        absent
-	                )
-	        );
-	    }
-	       
+    public StudentLessonController(StudentLessonService studentLessonService) {
+        this.studentLessonService = studentLessonService;
+    }
 
 
-	    @GetMapping("student/{studentId}")
-	    public ResponseEntity<List<StudentLessonDTO>> getStudentLessons(
-	            @PathVariable Long studentId) {
+    @PostMapping("student/{studentId}/lesson/{lessonId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StudentLessonDTO> assignLessonToStudent(
+            @PathVariable Long studentId,
+            @PathVariable Long lessonId) {
 
-	        return ResponseEntity.ok(
-	                studentLessonService.getStudentLessons(studentId)
-	        );
-	    }
+        return ResponseEntity.ok(
+                studentLessonService.assignLessonToStudent(
+                        studentId,
+                        lessonId
+                )
+        );
+    }
 
-	    @GetMapping("student/{studentId}/lesson/{lessonId}")
-	    public ResponseEntity<StudentLessonDTO> getStudentLesson(
-	            @PathVariable Long studentId,
-	            @PathVariable Long lessonId) {
 
-	        return ResponseEntity.ok(
-	                studentLessonService.getStudentLesson(studentId, lessonId)
-	        );
-	    }
-	    
-	}
-	
+    @PutMapping("{studentLessonId}/grade/{grade}/absent")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<StudentLessonDTO> setAbsentAndGrade(
+            @PathVariable Long studentLessonId,
+            @PathVariable Grade grade,
+            @RequestParam @PositiveOrZero int absent,
+            Authentication authentication) {
 
+        return ResponseEntity.ok(
+                studentLessonService.setAbsentAndGrade(
+                        studentLessonId,
+                        grade,
+                        absent,
+                        authentication
+                )
+        );
+    }
+
+
+    @GetMapping("student/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<StudentLessonDTO>> getStudentLessons(
+            @PathVariable Long studentId) {
+
+        return ResponseEntity.ok(
+                studentLessonService.getStudentLessons(studentId)
+        );
+    }
+
+
+    @GetMapping("student/{studentId}/lesson/{lessonId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<StudentLessonDTO> getStudentLesson(
+            @PathVariable Long studentId,
+            @PathVariable Long lessonId) {
+
+        return ResponseEntity.ok(
+                studentLessonService.getStudentLesson(studentId, lessonId)
+        );
+    }
+}

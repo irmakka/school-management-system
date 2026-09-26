@@ -1,24 +1,21 @@
 package com.example.demo.config;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.demo.Service.UserService;
-
 
 
 @Configuration
-@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -31,29 +28,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-            		.requestMatchers("/auth/login").permitAll()
-
-            		.requestMatchers(HttpMethod.POST, "/students").permitAll()
-
-            		.requestMatchers(HttpMethod.GET, "/students/me")
-            		    .hasAnyRole("ADMIN", "STUDENT")
-
-            		.requestMatchers(HttpMethod.GET, "/students")
-            		    .hasRole("ADMIN")
-
-            		.requestMatchers(HttpMethod.GET, "/students/{studentId}")
-            		    .hasRole("ADMIN")
-
-            		.requestMatchers(HttpMethod.GET, "/students/class/{classNo}")
-            		    .hasRole("ADMIN")
-
-            		.requestMatchers(HttpMethod.DELETE, "/students/{studentId}")
-            		    .hasRole("ADMIN")
-
-            		.anyRequest().authenticated()
-            )
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/login").permitAll()
+            .anyRequest().authenticated()
+        )
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class

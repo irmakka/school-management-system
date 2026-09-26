@@ -21,9 +21,6 @@ public class RegisterDTO {
     @NotBlank
     private String email;
 
-    @NotBlank
-
-	@Column(unique =true)
     @Size(min = 8, max = 20)
     private String password;
 

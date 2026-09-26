@@ -23,6 +23,8 @@ import com.example.demo.Service.StudentService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
 
@@ -42,32 +44,38 @@ this.stAssignmentService=stAssignmentService;
  }
 
 @GetMapping()
+@PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
 public ResponseEntity<List<StudentDTO>> getStudents(){
 	List<StudentDTO> students= stService.getAllStudents();
 	return ResponseEntity.ok(students);
 }
 @GetMapping("{studentId}")
+@PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
 public ResponseEntity<StudentDTO> getAStudent(@PathVariable Long studentId){
 	return ResponseEntity.ok(stService.getAStudent(studentId));
 }
  
 @PostMapping("save")
+@PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<StudentDTO> saveStudent(@Valid @RequestBody RegisterDTO registerDTO){
     StudentDTO savedStudent=stService.saveStudent(registerDTO);
     return ResponseEntity.ok(savedStudent);
 }
 
 @GetMapping("class/{classNo}")
+@PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
 public ResponseEntity<List<StudentDTO>> getStudentsByClass(@PathVariable @NotBlank  String classNo ){
 	List<StudentDTO> students= stService.getByStudentClasses(classNo);
     return ResponseEntity.ok(students);
 }
 @DeleteMapping("{studentId}")
+@PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<String> deleteStudent(@PathVariable Long studentId){
 	return ResponseEntity.ok(stService.deleteStudent(studentId));	
 }
 
 @GetMapping("/me")
+@PreAuthorize("hasRole('STUDENT')")
 public ResponseEntity<StudentDTO> getMyStudent(Authentication authentication) {
     String email = authentication.getName();
 
@@ -76,6 +84,7 @@ public ResponseEntity<StudentDTO> getMyStudent(Authentication authentication) {
     );
 }
 @GetMapping("/me/lessons")
+@PreAuthorize("hasRole('STUDENT')")
 public ResponseEntity<List<StudentLessonDTO>> getMyLessons(
         Authentication authentication) {
 
@@ -86,6 +95,7 @@ public ResponseEntity<List<StudentLessonDTO>> getMyLessons(
     );
 }
 @GetMapping("/me/assignments")
+@PreAuthorize("hasRole('STUDENT')")
 public ResponseEntity<List<StudentAssignmentDTO>> getMyAssignments(
         Authentication authentication) {
 

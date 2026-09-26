@@ -1,5 +1,7 @@
 package com.example.demo.DTO;
 
+import jakarta.validation.constraints.Size;
+
 public class LoginRequestDTO {
 
     private String email;

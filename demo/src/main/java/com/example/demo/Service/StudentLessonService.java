@@ -2,6 +2,8 @@ package com.example.demo.Service;
 
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.DTO.StudentLessonDTO;
@@ -27,12 +29,13 @@ public class StudentLessonService {
     public StudentLessonService(
             StudentLessonRepository studentLessonRepository,
             StudentRepository studentRepository,
-            LessonRepository lessonRepository,StudentLessonMapper studentLessonMapper) {
+            LessonRepository lessonRepository,
+            StudentLessonMapper studentLessonMapper) {
 
         this.studentLessonRepository = studentLessonRepository;
         this.studentRepository = studentRepository;
         this.lessonRepository = lessonRepository;
-        this.studentLessonMapper=studentLessonMapper;
+        this.studentLessonMapper = studentLessonMapper;
     }
 
     public StudentLessonDTO assignLessonToStudent(
@@ -59,16 +62,39 @@ public class StudentLessonService {
         return studentLessonMapper
                 .mapStudentLessonToStudentLessonDTO(savedStudentLesson);
     }
+
+
     public StudentLessonDTO setAbsentAndGrade(
             Long studentLessonId,
             Grade grade,
-            int absent) {
+            int absent,
+            Authentication authentication) {
 
         StudentLesson studentLesson =
                 studentLessonRepository.findById(studentLessonId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Student lesson not found"));
+
+        boolean isAdmin = authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority ->
+                        authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+
+            String teacherEmail = authentication.getName();
+
+            if (studentLesson.getLesson().getTeacher() == null ||
+                    !studentLesson.getLesson()
+                            .getTeacher()
+                            .getEmail()
+                            .equals(teacherEmail)) {
+
+                throw new AccessDeniedException(
+                        "You are not authorized to update this student's grade and attendance");
+            }
+        }
 
         studentLesson.setGrade(grade);
         studentLesson.setAbsentism(absent);
@@ -80,6 +106,7 @@ public class StudentLessonService {
                 .mapStudentLessonToStudentLessonDTO(savedStudentLesson);
     }
 
+
     public List<StudentLessonDTO> getStudentLessons(Long studentId) {
 
         List<StudentLesson> studentLessons =
@@ -89,6 +116,7 @@ public class StudentLessonService {
                 .map(studentLessonMapper::mapStudentLessonToStudentLessonDTO)
                 .toList();
     }
+
 
     public StudentLessonDTO getStudentLesson(
             Long studentId,
@@ -104,6 +132,8 @@ public class StudentLessonService {
         return studentLessonMapper
                 .mapStudentLessonToStudentLessonDTO(studentLesson);
     }
+
+
     public List<StudentLessonDTO> getMyLessons(String email) {
 
         Student student = studentRepository.findByEmail(email)

@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -30,6 +30,9 @@ public class Lesson {
     @OneToMany(mappedBy="lesson")
     @JsonIgnore
     List<Assignment> assignments;
+    
+    @ManyToOne
+    Teacher teacher; 
     
    
     public Lesson() {}
@@ -101,6 +104,16 @@ public class Lesson {
 
 	public void setAssignments(List<Assignment> assignments) {
 		this.assignments = assignments;
+	}
+
+
+	public Teacher getTeacher() {
+		return teacher;
+	}
+
+
+	public void setTeacher(Teacher teacher) {
+		this.teacher = teacher;
 	}
 
 	
