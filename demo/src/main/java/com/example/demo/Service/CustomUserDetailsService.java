@@ -1,3 +1,4 @@
+
 package com.example.demo.Service;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,14 +15,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRep;
 
     public CustomUserDetailsService(UserRepository userRep) {
-        super();
         this.userRep = userRep;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) {
+    public UserDetails loadUserByUsername(String email)
+            throws UsernameNotFoundException {
 
-        User user = userRep.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRep.findByEmail(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found"));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
@@ -30,3 +33,4 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .build();
     }
 }
+

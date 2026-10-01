@@ -1,3 +1,4 @@
+
 package com.example.demo.config;
 
 import java.io.IOException;
@@ -15,65 +16,67 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter{
-	private final JwtService jwtService;
-	private final CustomUserDetailsService userDetailsService;
-	public JwtAuthenticationFilter(
-	        JwtService jwtService,
-	        CustomUserDetailsService userDetailsService) {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	    this.jwtService = jwtService;
-	    this.userDetailsService = userDetailsService;
-	}
-	
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
 
-	@Override
-	protected void doFilterInternal(
-	        HttpServletRequest request,
-	        HttpServletResponse response,
-	        FilterChain filterChain)
-	        throws ServletException, IOException {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            CustomUserDetailsService userDetailsService) {
 
-	    String authHeader = request.getHeader("Authorization");
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
 
-	    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-	        filterChain.doFilter(request, response);
-	        return;
-	    }
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-	    String jwt = authHeader.substring(7);
+        String authHeader = request.getHeader("Authorization");
 
-	    try {
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
 
-	        String email = jwtService.extractEmail(jwt);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-	        UserDetails userDetails =
-	                userDetailsService.loadUserByUsername(email);
+        String jwt = authHeader.substring(7);
 
-	        if (jwtService.isTokenValid(jwt, userDetails)) {
+        try {
 
-	            UsernamePasswordAuthenticationToken authentication =
-	                    new UsernamePasswordAuthenticationToken(
-	                            userDetails,
-	                            null,
-	                            userDetails.getAuthorities()
-	                    );
+            String email = jwtService.extractEmail(jwt);
 
-	            SecurityContextHolder.getContext()
-	                    .setAuthentication(authentication);
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(email);
 
-	            filterChain.doFilter(request, response);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
 
-	        } else {
-	            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	        }
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-	    } catch (Exception e) {
-	        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	    }
-	}
-	
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authentication);
+            }
 
-	
+        } catch (Exception e) {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }
+
